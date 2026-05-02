@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { connectDB } from "./lib/db.js";
 import authroute from "./routes/auth.route.js"
+import productRoute from "./routes/products.route.js"
 import cookieParser from "cookie-parser";
 dotenv.config();
 
@@ -15,6 +16,7 @@ connectDB();
 
 
 app.use("/api/auth",authroute);
+app.use("/api/products",productRoute);
 
 app.listen(PORT,()=>{
     console.log("server is running");
