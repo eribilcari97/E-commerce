@@ -3,7 +3,7 @@ import { addToCart } from "../controllers/cartController.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { getCartProducts,removeAllFromCart,updateQuantity } from "../controllers/cartController.js";
 
-const router = express();
+const router = express.Router();
 router.get("/",protectRoute,getCartProducts)
 router.post("/",protectRoute, addToCart);
 
