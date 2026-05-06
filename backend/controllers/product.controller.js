@@ -15,22 +15,42 @@ try {
 
 export const getFeaturedProducts = async (req,res)=>{
     try {
-     
-        let featuredProducts=  await redis.get("feautured_products")
-        if(feauturedProducts){
-            return res.json(JSON.parse(feauturedProducts));
-
+        let featuredProducts = null;
+        
+        try {
+            const cachedData = await redis.get("featured_products");
+            if (cachedData) {
+                featuredProducts = JSON.parse(cachedData);
+                return res.json(featuredProducts);
+            }
+        } catch (parseError) {
+            console.log("Error parsing cached featured products, fetching fresh from DB", parseError.message);
+            // Delete corrupted cache entry
+            try {
+                await redis.del("featured_products");
+                console.log("Deleted corrupted cache entry");
+            } catch (delError) {
+                console.log("Error deleting corrupted cache:", delError.message);
+            }
+            // Continue to fetch from DB
         }
+
         //if not in redis, fetch it from mongodb
         featuredProducts = await Product.find({isFeatured:true}).lean();
-        //.lean()-----> return simple objects ,, plain js object instead of mongo db doc , ---for performance
 
-        if(!featuredProducts){
-            return res.json(404).json({message:"No featured products found"})
+        if(!featuredProducts || featuredProducts.length === 0){
+            return res.json([]);
         }
-        //store in redis for future access;
-        await redis.set("featured_products",JSON.stringify(feauturedProducts))
-        res.json(feauturedProducts)
+        
+        //store in redis for future access
+        try {
+            await redis.set("featured_products", JSON.stringify(featuredProducts));
+        } catch (redisError) {
+            console.log("Error caching featured products:", redisError.message);
+            // Continue even if caching fails
+        }
+        
+        res.json(featuredProducts);
 
     } catch (error) {
          console.log("Error in getFeaturedProducts controller",error.message);
@@ -126,19 +146,19 @@ export const getProductsByCategory = async (req,res)=>{
 
 }
 
-export const toggleFeauturedProduct = async (req,res)=>{
+export const toggleFeaturedProduct = async (req,res)=>{
     try {
         if(product){
-            product.isFeautured= !product.isFeautured;
+            product.isFeatured= !product.isFeatured;
             const updatedProduct = await product.save();
-            await updateFeauturedProductsCache();
+            await updateFeaturedProductsCache();
             res.json(updatedProduct);
         }else{
             res.status(404).json({message:"Product not found"});
 
         }
     } catch (error) {
-        console.log("Error in toggleFeauturedProduct controller",error.message);
+        console.log("Error in toggleFeaturedProduct controller",error.message);
         res.status(500).json({message:"server error",error:error.message});
 
     }

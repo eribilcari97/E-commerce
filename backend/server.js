@@ -14,7 +14,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.json());//the body of the request
+app.use(express.json({ limit: "10mb" }));//the body of the request
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser())
 connectDB();
 

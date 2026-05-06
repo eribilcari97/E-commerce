@@ -19,7 +19,7 @@ const {totalSales,totalRevenue}=salesData[0]||{totalSales:0,totalRevenue:0};
 
 
 return {
-    user:totalUsers,
+    users:totalUsers,
     products:totalProducts,
     totalSales,
     totalRevenue
